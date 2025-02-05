@@ -2,9 +2,9 @@ import streamlit as st
 import requests
 import openai
 import datetime
-
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Function to get weather data from OpenWeatherMap API
@@ -52,7 +52,7 @@ def display_weekly_forecast(data):
             if date not in displayed_dates and len(displayed_dates) < 7:
                 displayed_dates.add(date)
                 with cols[col_index]:
-                    temp = day['main']['temp'] - 273.15
+                    temp = day['main']['temp'] - 273.15  # Kelvin to Celsius
                     icon = get_weather_icon(day['weather'][0]['description'])
                     st.markdown(f"**{date}**")
                     st.markdown(f"{icon}")
@@ -81,7 +81,7 @@ def main():
                 st.session_state.get_weather = False
 
     # API keys
-    weather_api_key =os.getenv("weather_api_key")
+    weather_api_key = os.getenv("weather_api_key")
     openai_api_key = os.getenv("openai_api_key") 
 
     if st.session_state.get_weather:
@@ -89,49 +89,56 @@ def main():
             weather_data = get_weather_data(city, weather_api_key)
 
             if weather_data.get("cod") != 404:
-                # Current weather display
-                st.header(f"Weather in {city.title()} ", divider="blue")
+                # Check if the keys exist in the response before accessing them
+                main_data = weather_data.get('main', {})
+                wind_data = weather_data.get('wind', {})
+                weather_description = weather_data['weather'][0] if 'weather' in weather_data else {}
                 
-                # Main metrics
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.metric("Temperature 🌡️", 
-                            f"{weather_data['main']['temp'] - 273.15:.1f}°C",
-                            help="Current temperature")
-                with col2:
-                    st.metric("Humidity 💧", 
-                            f"{weather_data['main']['humidity']}%",
-                            help="Relative humidity")
-                with col3:
-                    st.metric("Wind Speed 🌬️", 
-                            f"{weather_data['wind']['speed']} m/s",
-                            help="Wind speed")
-                
-                # Weather description
-                current_weather = weather_data['weather'][0]
-                icon = get_weather_icon(current_weather['description'])
-                st.markdown(f"""
-                    <div style="background-color:#e6f3ff;padding:20px;border-radius:10px">
-                        <h4 style="margin:0">{icon} {current_weather['description'].capitalize()}</h4>
-                    </div>
-                """, unsafe_allow_html=True)
-                
-                # Weekly forecast
-                lat = weather_data['coord']['lat']
-                lon = weather_data['coord']['lon']
-                forecast_data = get_weekly_forecast(weather_api_key, lat, lon)
-                
-                if forecast_data.get("cod") != "404":
-                    display_weekly_forecast(forecast_data)
-                
-                # Additional details
-                with st.expander("Advanced Details"):
-                    cols = st.columns(2)
-                    cols[0].metric("Pressure", f"{weather_data['main']['pressure']} hPa")
-                    cols[1].metric("Visibility", f"{weather_data.get('visibility', 'N/A')}m")
-                    cols[0].metric("Cloud Cover", f"{weather_data['clouds']['all']}%")
-                    cols[1].metric("Feels Like", 
-                                 f"{weather_data['main']['feels_like'] - 273.15:.1f}°C")
+                if main_data and wind_data and weather_description:
+                    # Current weather display
+                    st.header(f"Weather in {city.title()} ", divider="blue")
+                    
+                    # Main metrics
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Temperature 🌡️", 
+                                f"{main_data.get('temp', 0) - 273.15:.1f}°C",  # Ensure 'temp' exists
+                                help="Current temperature")
+                    with col2:
+                        st.metric("Humidity 💧", 
+                                f"{main_data.get('humidity', 0)}%",
+                                help="Relative humidity")
+                    with col3:
+                        st.metric("Wind Speed 🌬️", 
+                                f"{wind_data.get('speed', 0)} m/s",
+                                help="Wind speed")
+                    
+                    # Weather description
+                    icon = get_weather_icon(weather_description.get('description', ''))
+                    st.markdown(f"""
+                        <div style="background-color:#e6f3ff;padding:20px;border-radius:10px">
+                            <h4 style="margin:0">{icon} {weather_description.get('description', 'No description').capitalize()}</h4>
+                        </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Weekly forecast
+                    lat = weather_data['coord'].get('lat', 0)
+                    lon = weather_data['coord'].get('lon', 0)
+                    forecast_data = get_weekly_forecast(weather_api_key, lat, lon)
+                    
+                    if forecast_data.get("cod") != "404":
+                        display_weekly_forecast(forecast_data)
+                    
+                    # Additional details
+                    with st.expander("Advanced Details"):
+                        cols = st.columns(2)
+                        cols[0].metric("Pressure", f"{main_data.get('pressure', 'N/A')} hPa")
+                        cols[1].metric("Visibility", f"{weather_data.get('visibility', 'N/A')}m")
+                        cols[0].metric("Cloud Cover", f"{weather_data['clouds'].get('all', 'N/A')}%")
+                        cols[1].metric("Feels Like", 
+                                     f"{main_data.get('feels_like', 0) - 273.15:.1f}°C")
+                else:
+                    st.error("Incomplete weather data received.")
             else:
                 st.error("City not found. Please try another location.")
 

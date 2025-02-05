@@ -1,10 +1,9 @@
 import streamlit as st
 import requests
-import openai
 import datetime
-
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Function to get weather data from OpenWeatherMap API
@@ -64,11 +63,15 @@ def display_weekly_forecast(data):
         st.error("Error in displaying weekly forecast: " + str(e))
 
 def main():
-    # Page configuration
-    st.set_page_config(page_title="SkySync", page_icon="🌤️", layout="centered")
+    # Page configuration with wide layout
+    st.set_page_config(page_title="SkySync", page_icon="🌤️", layout="wide")
+
+    # Initialize session state for sidebar
+    if "sidebar_expanded" not in st.session_state:
+        st.session_state.sidebar_expanded = True
 
     # Sidebar configuration
-    with st.sidebar:
+    with st.sidebar if st.session_state.sidebar_expanded else st.container():
         st.image("cloud.jpg", width=120)
         st.title("SkySync 🌦️")
         st.markdown("---")
@@ -76,15 +79,15 @@ def main():
         st.markdown("---")
         if st.button("Get Weather", use_container_width=True, type="primary"):
             st.session_state.get_weather = True
-        else:
-            if 'get_weather' not in st.session_state:
-                st.session_state.get_weather = False
+            st.session_state.sidebar_expanded = False  # Hide sidebar
 
     # API keys
     weather_api_key = st.secrets["weather_api_key"]
-    openai_api_key = os.getenv("openai_api_key") 
 
     if st.session_state.get_weather:
+        # Collapse the sidebar and refresh page state
+        st.experimental_set_query_params(sidebar="collapsed")
+
         with st.spinner("🌤️ Gathering weather magic..."):
             weather_data = get_weather_data(city, weather_api_key)
 

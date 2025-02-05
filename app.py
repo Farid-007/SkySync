@@ -3,6 +3,10 @@ import requests
 import openai
 import datetime
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # Function to get weather data from OpenWeatherMap API
 def get_weather_data(city, weather_api_key):
     base_url = "https://api.openweathermap.org/data/2.5/weather"
@@ -77,8 +81,8 @@ def main():
                 st.session_state.get_weather = False
 
     # API keys
-    weather_api_key = "7ac3e65425809bcba052a2dc3c71e5f6"
-    openai_api_key = "your-openai-api-key"
+    weather_api_key =os.getenv("weather_api_key")
+    openai_api_key = os.getenv("openai_api_key") 
 
     if st.session_state.get_weather:
         with st.spinner("🌤️ Gathering weather magic..."):

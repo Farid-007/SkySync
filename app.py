@@ -25,7 +25,7 @@ st.markdown(
         if (sidebarButton && sidebarButton.ariaExpanded === "false") {
             sidebarButton.click();
         }
-    }, 1000); // Delay to ensure Streamlit loads properly
+    }, 300); // Delay to ensure Streamlit loads properly
     </script>
     """,
     unsafe_allow_html=True

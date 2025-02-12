@@ -7,6 +7,29 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Page configuration
+st.set_page_config(
+    page_title="SkySync",
+    page_icon="🌤️",
+    layout="wide",  # Ensures better space usage on mobile
+    initial_sidebar_state="expanded"  # This forces the sidebar to be open by default
+)
+
+# JavaScript to force open the sidebar on mobile
+st.markdown(
+    """
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let sidebarButton = window.parent.document.querySelector('[data-testid="collapsedControl"]');
+        if (sidebarButton && sidebarButton.ariaExpanded === "false") {
+            sidebarButton.click();  // Simulate a click to open the sidebar
+        }
+    });
+    </script>
+    """,
+    unsafe_allow_html=True
+)
+
 # Function to get weather data from OpenWeatherMap API
 def get_weather_data(city, weather_api_key):
     base_url = "https://api.openweathermap.org/data/2.5/weather"
@@ -64,14 +87,6 @@ def display_weekly_forecast(data):
         st.error("Error in displaying weekly forecast: " + str(e))
 
 def main():
-    # Page configuration
-    st.set_page_config(
-    page_title="SkySync",
-    page_icon="🌤️",
-    layout="wide",  # Ensures better space usage on mobile
-    initial_sidebar_state="expanded"  # This forces the sidebar to be open by default
-)
-
     # Initialize session state
     if 'get_weather' not in st.session_state:
         st.session_state.get_weather = False

@@ -16,15 +16,16 @@ st.set_page_config(
 )
 
 # JavaScript to force open the sidebar on mobile
+# Force sidebar open on page load
 st.markdown(
     """
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    setTimeout(function() {
         let sidebarButton = window.parent.document.querySelector('[data-testid="collapsedControl"]');
         if (sidebarButton && sidebarButton.ariaExpanded === "false") {
-            sidebarButton.click();  // Simulate a click to open the sidebar
+            sidebarButton.click();
         }
-    });
+    }, 1000); // Delay to ensure Streamlit loads properly
     </script>
     """,
     unsafe_allow_html=True

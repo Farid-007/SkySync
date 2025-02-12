@@ -87,7 +87,7 @@ def main():
                 st.rerun()
     
     # API keys
-    weather_api_key = st.secrets["weather_api_key"]
+    weather_api_key = st.secrets.get("weather_api_key") or os.getenv("weather_api_key")
     openai_api_key = os.getenv("openai_api_key") 
 
     if st.session_state.get_weather:

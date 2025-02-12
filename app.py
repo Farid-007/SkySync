@@ -2,9 +2,9 @@ import streamlit as st
 import requests
 import openai
 import datetime
-
 import os
 from dotenv import load_dotenv
+
 load_dotenv()
 
 # Function to get weather data from OpenWeatherMap API
@@ -65,32 +65,38 @@ def display_weekly_forecast(data):
 
 def main():
     # Page configuration
-    st.set_page_config(page_title="SkySync", page_icon="🌤️", layout="centered")
+    st.set_page_config(page_title="SkySync", page_icon="🌤️", layout="wide")
 
-    # Sidebar configuration
-    with st.sidebar:
-        st.image("cloud.jpg", width=120)
-        st.title("SkySync 🌦️")
-        st.markdown("---")
-        city = st.text_input("Enter City name", "London")
-        st.markdown("---")
-        if st.button("Get Weather", use_container_width=True, type="primary"):
-            st.session_state.get_weather = True
-        else:
-            if 'get_weather' not in st.session_state:
-                st.session_state.get_weather = False
+    # Initialize session state
+    if 'get_weather' not in st.session_state:
+        st.session_state.get_weather = False
+    if 'city' not in st.session_state:
+        st.session_state.city = ""
 
+    # Sidebar (Hidden after search)
+    if not st.session_state.get_weather:
+        with st.sidebar:
+            st.image("cloud.jpg", width=120)
+            st.title("SkySync 🌦️")
+            st.markdown("---")
+            city = st.text_input("Enter City name", "London")
+            st.markdown("---")
+            if st.button("Get Weather", use_container_width=True, type="primary"):
+                st.session_state.get_weather = True
+                st.session_state.city = city
+                st.rerun()
+    
     # API keys
     weather_api_key = st.secrets["weather_api_key"]
     openai_api_key = os.getenv("openai_api_key") 
 
     if st.session_state.get_weather:
         with st.spinner("🌤️ Gathering weather magic..."):
-            weather_data = get_weather_data(city, weather_api_key)
+            weather_data = get_weather_data(st.session_state.city, weather_api_key)
 
             if weather_data.get("cod") != 404:
                 # Current weather display
-                st.header(f"Weather in {city.title()} ", divider="blue")
+                st.header(f"Weather in {st.session_state.city.title()} ", divider="blue")
                 
                 # Main metrics
                 col1, col2, col3 = st.columns(3)
@@ -132,6 +138,10 @@ def main():
                     cols[0].metric("Cloud Cover", f"{weather_data['clouds']['all']}%")
                     cols[1].metric("Feels Like", 
                                  f"{weather_data['main']['feels_like'] - 273.15:.1f}°C")
+                
+                if st.button("Back to Search"):
+                    st.session_state.get_weather = False
+                    st.rerun()
             else:
                 st.error("City not found. Please try another location.")
 

@@ -65,7 +65,12 @@ def display_weekly_forecast(data):
 
 def main():
     # Page configuration
-    st.set_page_config(page_title="SkySync", page_icon="🌤️", layout="wide")
+    st.set_page_config(
+    page_title="SkySync",
+    page_icon="🌤️",
+    layout="wide",  # Ensures better space usage on mobile
+    initial_sidebar_state="expanded"  # This forces the sidebar to be open by default
+)
 
     # Initialize session state
     if 'get_weather' not in st.session_state:
